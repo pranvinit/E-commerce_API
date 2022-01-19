@@ -7,6 +7,7 @@ const createJWT = (payload) => {
   return token;
 };
 
+// return decoded payload
 const verifyJWT = (token) => jwt.verify(token, process.env.JWT_SECRET);
 
 // executes on register and login
