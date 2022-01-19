@@ -55,7 +55,7 @@ const updateReview = async (req, res) => {
   }
 
   // throws error if request user is not the resouce user
-  checkPermissions(req.user.userId, review.user);
+  checkPermissions(req.user, review.user);
   review.rating = rating;
   review.title = title;
   review.comment = comment;
@@ -70,11 +70,17 @@ const deleteReview = async (req, res) => {
   if (!review) {
     throw new CustomError.NotFoundError(`No review with id : ${req.params.id}`);
   }
-  checkPermissions(req.user.userId, review.user);
+  checkPermissions(req.user, review.user);
 
   // triggers the pre 'remove' hook
   await review.remove();
   res.status(StatusCodes.OK).json({ msg: "Review was removed" });
+};
+
+const getSingleProductReviews = async (req, res) => {
+  const { id: productId } = req.params;
+  const reviews = Review.find({ product: productId });
+  res.status(StatusCodes.OK).json({ reviews, nbHits: (await reviews).length });
 };
 
 module.exports = {
@@ -83,4 +89,5 @@ module.exports = {
   getSingleReview,
   updateReview,
   deleteReview,
+  getSingleProductReviews,
 };
