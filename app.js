@@ -22,13 +22,39 @@ const orderRouter = require("./routes/orderRoutes");
 const morgan = require("morgan");
 const cookieParser = require("cookie-parser");
 const fileUpload = require("express-fileupload");
+const rateLimiter = require("express-rate-limit");
+const helmet = require("helmet");
+const xss = require("xss-clean");
+const mongoSanitize = require("express-mongo-sanitize");
+const cors = require("cors");
 
 // setting express middlewares
 app.use(express.json()); // parses json data in requests and sets it at req.body
 app.use(express.static("./public")); // routes static file requests to the provided path
 
+// express rate limiter config
+app.set("trust proxy", 1);
+
+// limits number of requests made by specific ips
+app.use(
+  rateLimiter({
+    windowMs: 15 * 60 * 1000,
+    max: 60,
+  })
+);
+// adds extra headers to make API request secure
+app.use(helmet());
+// makes server accessible through other domains
+app.use(cors());
+// cleans the req and res objects to prevent csrf attacks
+app.use(xss());
+// sanitizes mongo query objects to prevent injection attacks
+app.use(mongoSanitize());
+
 // setting third-party middlewares
-app.use(morgan("tiny"));
+if (process.env.NODE_ENV === "development") {
+  app.use(morgan("tiny"));
+}
 app.use(cookieParser(process.env.SIGNED_COOKIE_SECRET));
 app.use(fileUpload());
 
